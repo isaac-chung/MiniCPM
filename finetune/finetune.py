@@ -52,7 +52,11 @@ class SupervisedDataset(Dataset):
         assistant_tokens='<AI>',
     ):
         super(SupervisedDataset, self).__init__()
-        self.data = json.load(open(data_path))
+        if "jsonl" in data_path:
+            with open(data_path) as f:
+                self.data = [json.loads(line) for line in f]
+        else:
+            self.data = json.load(open(data_path))
         self.tokenizer = tokenizer
         self.model_max_length = model_max_length
         self.user_tokens = self.tokenizer.encode(user_tokens) #针对不同模型，都可以对应到<用户>的id
@@ -161,6 +165,7 @@ def load_model_and_tokenizer(
 
 
 if __name__ == "__main__":
+    model_name = "MiniCPM-2B-RAFT-lora-hotpotqa-dev"
     model_path = "/mnt/data/user/tc_agi/yh/models/MiniCPM"
     parser = transformers.HfArgumentParser(
         (ModelArguments, DataArguments, TrainingArguments)
@@ -195,4 +200,4 @@ if __name__ == "__main__":
 
     trainer.train()
     # save the incremental PEFT weights, more details can be found in https://huggingface.co/blog/peft
-    # model.save_pretrained("output_dir") 
+    model.save_pretrained(f"/home/ubuntu/work/experimental/isaac/llm/{model_name}") 
